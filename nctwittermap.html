@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+<script type="text/javascript" src="lib/d3/d3.js"></script>
+<script type="text/javascript" src="tweethandle.js"></script>
+<script type="text/javascript" src="d3colors.js"></script>
+<script type="text/javascript" src="d3.layout.cloud.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<script>
+var MAGNIFICATION_FACTOR = 9;
+var fill = d3.scale.category20();
+
+
+function build(arr, div) {
+    d3.layout.cloud().size([600, 600])
+        .words(arr)
+        .padding(5)
+        .rotate(function() { return ~~(Math.random() * 11) * 30; })
+        .font("Impact")
+        .fontSize(function(d) { return d.size; })
+        .on("end", function(words) { draw(words, div) })
+        .start();
+}
+
+function draw(words, div) {
+    $("#" + div).empty();
+    d3.select("#" + div).append("svg")
+        .attr("width", 600)
+        .attr("height", 600)
+        .append("g")
+        .attr("transform", "translate(300,300)")
+        .selectAll("text")
+        .data(words)
+        .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Impact")
+        .style("fill", function(d, i) { return colors.get(div)(i); })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+}
+
+
+
+function get_words(statuses) {
+    // return an array in this format
+    // [{text: "hello", size: 20}, {text: "hi", size: 40}, {text: "testing", size: 60}];
+    // stay between 20 and 60
+    word_map = [];
+    words = [];
+    words_to_ignore = {
+            "@":'',
+            "the":'',
+            "is":'',
+            "be":'',
+            "to":'',
+            "of":'',
+            "and":'',
+            "a":'',
+            "in":'',
+            "that":'',
+            "have":'',
+            "i":'',
+            "it":'',
+            "for":'',
+            "not":'',
+            "on":'',
+            "with":'',
+            "he":'',
+            "as":'',
+            "you":'',
+            "do":'',
+            "at":'',
+            "this":'',
+            "but":'',
+            "his":'',
+            "by":'',
+            "from":'',
+            "they":'',
+            "we":'',
+            "say":'',
+            "her":'',
+            "she":'',
+            "or":'',
+            "an":'',
+            "will":'',
+            "my":'',
+            "one":'',
+            "all":'',
+            "would":'',
+            "there":'',
+            "their":'',
+            "what":'',
+            "so":'',
+            "up":'',
+            "out":'',
+            "if":'',
+            "about":'',
+            "who":'',
+            "get":'',
+            "which":'',
+            "go":'',
+            "me":'',
+            "when":'',
+            "make":'',
+            "can":'',
+            "like":'',
+            "time":'',
+            "no":'',
+            "him":'',
+            "know":'',
+            "take":'',
+            "into":'',
+            "your":'',
+            "good":'',
+            "some":'',
+            "could":'',
+            "them":'',
+            "see":'',
+            "than":'',
+            "then":'',
+            "now":'',
+            "only":'',
+            "come":'',
+            "its":'',
+            "over":'',
+            "also":'',
+            "after":'',
+            "how":'',
+            "our":'',
+            "well":'',
+            "way":'',
+            "even":'',
+            "new":'',
+            "because":'',
+            "any":'',
+            "these":'',
+            "most":'',
+            "us":'',
+            "are":'',
+            "am":'',
+            "was":'',
+            "are":'',
+            "i'll":'',
+            "i've":'',
+            "af":'',
+            "want":'',
+            "said":'',
+            "day":'',
+            "were":'',
+            "i'm":'',
+            "&amp;":'',
+	    "don't":'',
+            "it's":'',
+            "has":'',
+            "im":'',
+            "n":'',
+            "got":'',
+            "u":'',
+            "did":'',
+            "you're":'',
+            "he's":'',
+            "she's":'',
+            "done":'',
+            "just":'',
+            "never":'',
+            "can't":'',
+            "should":'',
+            "could":'',
+            "did":'',
+            "too":'',
+            "haven't":'',
+            "have":'',
+            "always":'',
+            "much":'',
+            "lol":'',
+            "back":'',
+            "wanna":'',
+
+            "pussy":'',
+            "hoe":'',
+            "hell":'',
+	    "ass":'',
+	    "wtf":'',
+            "gay":'',
+            "nigga":'',
+            "niggas":'',
+            "bitches":'',
+            "bitch":''};
+
+    for (i = 0; i < statuses.length; i++) {
+        tweet_words = statuses[i].text.split(" ");
+        for (j = 0; j < tweet_words.length; j++) {
+            word = tweet_words[j].toLowerCase();
+            word = word.replace(/[,.!?#"\(\)]/g, '');
+            word = word.replace(/fuck/gi, '');
+            word = word.replace(/shit/gi, '');
+            if (!(word in words_to_ignore) && word.charAt(0) != '@') {
+                if (!(word in word_map)) {
+                    word_map[word] = 1;
+                }
+                else {
+                     word_map[word] = word_map[word] + 1;
+                }
+            }
+        }
+    }
+    
+    for (word in word_map) {
+        words.push({text: word, size: word_map[word]});
+    }
+    //console.log(words);
+
+    words.sort(function(a, b){
+        return b.size - a.size;
+    });
+
+    for (i = 0; i < words.length; i++) {
+        words[i].size = 10 + words[i].size * MAGNIFICATION_FACTOR;
+    }
+
+    //console.log(words);
+
+    return words;
+}
+
+function get_univ_tweets(geocode, div) {
+    return $.ajax({
+        url: "twitter.php?geocode=" + geocode,
+        dataType: 'json',
+        type: 'GET',
+        async: true,
+        success: function(json) {
+            words = get_words(json.statuses);
+            build(words, div);
+        },
+        error: function(one, two) {
+            console.log(one); console.log(two);
+        }
+    });
+}
+
+$(function(){
+
+    var counter = 0;
+
+    ncsu = '35.784881,-78.682041';
+    uncw = '34.226059,-77.869785';
+    uncc = '35.307824,-80.728552';
+    app = '36.211014,-81.677343';
+    uncg = '36.069590,-79.807176';
+    ecu = '35.607674,-77.366959';
+    wcu = '35.309261,-83.184585';
+    unca = '35.619097,-82.571128';
+    fay = '35.075756,-78.892308';
+    eli = '36.281911,-76.214081';
+
+//    function update_all() {
+        //alert("go!");
+//        get_univ_tweets(ncsu, 'ncsu');
+//        get_univ_tweets(uncw, 'uncw');
+//        get_univ_tweets(uncc, 'uncc');
+//        get_univ_tweets(app, 'app');
+//        get_univ_tweets(uncg, 'uncg');
+//        get_univ_tweets(ecu, 'ecu');
+//        get_univ_tweets(wcu, 'wcu');
+//        get_univ_tweets(unca, 'unca');
+//        get_univ_tweets(fay, 'fay');
+//        get_univ_tweets(eli, 'eli');
+//    }
+
+    function update_next() {
+        if (counter == 0) {
+            get_univ_tweets(ncsu, 'ncsu');
+        }
+        else if (counter == 1) {
+            get_univ_tweets(uncw, 'uncw');
+        }
+        else if (counter == 2) {
+            get_univ_tweets(uncc, 'uncc');
+        }
+	else if (counter == 3) {
+            get_univ_tweets(app, 'app');
+        }
+	else if (counter == 4) {
+            get_univ_tweets(uncg, 'uncg');
+        }
+	else if (counter == 5) {
+            get_univ_tweets(ecu, 'ecu');
+        }
+	else if (counter == 6) {
+            get_univ_tweets(wcu, 'wcu');
+        }
+	else if (counter == 7) {
+            get_univ_tweets(unca, 'unca');
+        }
+	else if (counter == 8) {
+            get_univ_tweets(fay, 'fay');
+        }
+	else if (counter == 9) {
+            get_univ_tweets(eli, 'eli');
+        }
+        counter++;
+        if (counter > 9) {
+            counter = 0;
+        }
+    }
+
+//    update_all();
+    setInterval(update_next, 2000);
+    
+
+});
+</script>
+
+<style>
+body {
+    background-image: url(nc_outline.png);
+    background-repeat: no-repeat; 
+    width: 5760px;
+    min-height: 2304px;
+}
+#ncsu {
+    position: absolute;
+    left: 3444px;
+    top: 541px;
+}
+#uncw {
+    position: absolute;
+    left: 3762px;
+    top: 1618px;
+}
+#uncc {
+    position: absolute;
+    left: 2119px;
+    top: 854px;
+}
+#app {
+    position: absolute;
+    left: 1586px;
+    top: 206px;
+}
+#uncg {
+    position: absolute;
+    left: 2724px;
+    top: 321px;
+}
+#ecu {
+    position: absolute;
+    left: 4108px;
+    top: 695px;
+}
+#wcu {
+    position: absolute;
+    left: 506px;
+    top: 854px;
+}
+#unca {
+    position: absolute;
+    left: 1010px;
+    top: 595px;
+}
+#fay {
+    position: absolute;
+    left: 3300px;
+    top: 1127px;
+}
+#eli {
+    position: absolute;
+    left: 4600px;
+    top: 140px;
+}
+
+</style>
+
+</head>
+<div id="ncsu"></div>
+<div id="uncw"></div>
+<div id="uncc"></div>
+<div id="app"></div>
+<div id="uncg"></div>
+<div id="ecu"></div>
+<div id="wcu"></div>
+<div id="unca"></div>
+<div id="fay"></div>
+<div id="eli"></div>
+<body>
+</body>
+</html>
+

@@ -1,0 +1,11 @@
+var colors = new Map();
+colors.set('ncsu', d3.scale.ordinal().range(["#cc0000", "#000000", "#666666"]));
+colors.set('uncw', d3.scale.ordinal().range(["#007073", "#003366", "#f3e389"]));
+colors.set('uncc', d3.scale.ordinal().range(["#00703c", "#aaaaaa"]));
+colors.set('app', d3.scale.ordinal().range(["#222222", "#ffcc00", "#cdcba2"]));
+colors.set('uncg', d3.scale.ordinal().range(["#003366", "#ffcc00"]));
+colors.set('ecu', d3.scale.ordinal().range(["#592a8a", "#ffc702", "#000000"]));
+colors.set('wcu', d3.scale.ordinal().range(["#592c88", "#c1a875", "#000000"]));
+colors.set('unca', d3.scale.ordinal().range(["#3333ff", "#000000"]));
+colors.set('fay', d3.scale.ordinal().range(["#0067b1", "#b0b7bc"]));
+colors.set('eli', d3.scale.ordinal().range(["#0039a6", "#b71234", "#b1b9b7"]));
